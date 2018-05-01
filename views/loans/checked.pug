@@ -1,0 +1,66 @@
+extends ../layout
+
+block content
+  include ../includes/navigation
+  
+  body
+    h1 Checked Out Books
+    p
+      a.button(href='/loans/new') Create New Loan
+    p
+      | Filters 
+      a(href='/loans/all') All
+      |  
+      a(href='/loans/overdue') Overdue
+      |  
+      a(href='/loans/checked') Checked Out
+    table
+      thead
+        tr
+          th Book
+          th Patron 
+          th Loaned on
+          th Return by 
+          th Returned on
+          th Action
+      tbody
+        tr
+          td
+            a(href='/books/detail') Emma
+          td
+            a(href='/patrons/detail') Dave McFarland
+          td 2015-12-10
+          td 2020-10-20
+          td
+          td
+            a.button(href='/books/return') Return Book
+        tr
+          td
+            a(href='/books/detail') Harry Potter and the Goblet of Fire
+          td
+            a(href='/patrons/detail') Andrew Chalkley
+          td 2015-12-11
+          td 2015-12-18
+          td
+          td
+            a.button(href='/books/return') Return Book
+        tr
+          td
+            a(href='/books/detail') A Brief History of Time
+          td
+            a(href='/patrons/detail') Andrew Chalkley
+          td 2015-12-12
+          td 2015-12-19
+          td
+          td
+            a.button(href='/books/return') Return Book
+        tr
+          td
+            a(href='/books/detail') The Universe in a Nutshell
+          td
+            a(href='/patrons/detail') Alena Holligan
+          td 2015-12-13
+          td 2015-12-20
+          td
+          td
+            a.button(href='/books/return') Return Book

@@ -2,24 +2,7 @@ extends layout
 
 block content
   include includes/navigation
-
   body
-    h1 New Book
-    form(action="")
-      h2.error Oooops!
-      ul.error
-        li Author is required
-      p
-        label(for="title") Title
-        input(id="title" type="text")
-      p
-        label(for="author") Author
-        input(id="author" type="text") 
-      p
-        label(for="genre") Genre
-        input(id="genre" type="text") 
-      p
-        label(for="first_published") First Published
-        input(id="first_published" type="text") 
-      p
-        input(type="submit" value="Create New Book")  
+    h1= message
+    h2= error.status
+    pre #{error.stack}
