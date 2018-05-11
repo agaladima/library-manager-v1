@@ -1,8 +1,17 @@
 var express = require('express');
 var router = express.Router();
 var Book = require("../models").Book;
-Book.findAll().then(books => {
-  console.log(books);
+// Book.findAll().then(books => {
+//   console.log(books);
+// });
+
+// POST created book
+router.post("/new", function(req, res, next) {
+  Book.create(req.body).then(function(book){
+    res.redirect("/books/all");
+  }).catch(function(error){
+    res.send(500, error);
+  });
 });
 
 router.get('/all', function(req, res, next) {
@@ -14,8 +23,12 @@ router.get('/all', function(req, res, next) {
   //res.render("books/index", {title: "Books" });
 });
 
+// router.get('/new', function(req, res, next){
+//   res.render("books/new", { title: "New Books" });
+// });
+
 router.get('/new', function(req, res, next){
-  res.render("books/new", {title: "Books" });
+  res.render("books/new", {book: {}, title: "New Books" });
 });
 
 // router.get('/all', (req, res, next) => {
