@@ -4,30 +4,33 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-//connect
-//method override
-var routes = require('./routes/index');
-var books = require('./routes/books');
-var patrons = require('./routes/patrons');
-var loans = require('./routes/loans');
+var methodOverride = require('method-override');
+var moment = require('moment');
+
+var homeRoute = require('./routes/index');
+var booksRoute = require('./routes/books');
+var loansRoute = require('./routes/loans');
+var patronsRoute = require('./routes/patrons');
+
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(methodOverride('_method'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
-app.use('/books', books);
-app.use('/loans', loans);
-app.use('/patrons', patrons);
+app.use('/', homeRoute);
+app.use('/books', booksRoute);
+app.use('/loans', loansRoute);
+app.use('/patrons', patronsRoute);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -44,7 +47,10 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error', {
+    error: err,
+    title: "Error"
+  });
 });
 
 module.exports = app;
