@@ -1,6 +1,6 @@
 'use strict';
 module.exports = {
-  up: (queryInterface, Sequelize) => {
+  up: function(queryInterface, Sequelize) {
     return queryInterface.createTable('Loans', {
       id: {
         allowNull: false,
@@ -20,7 +20,7 @@ module.exports = {
       loaned_on: {
         type: Sequelize.DATE
       },
-      return_by: {
+      returned_by: {
         type: Sequelize.DATE
       },
       returned_on: {
@@ -36,7 +36,7 @@ module.exports = {
       }
     });
   },
-  down: (queryInterface, Sequelize) => {
+  down: function(queryInterface, Sequelize) {
     return queryInterface.dropTable('Loans');
   }
 };

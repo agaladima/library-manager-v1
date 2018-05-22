@@ -1,21 +1,31 @@
 {
-  "name": "myapp",
-  "version": "0.0.0",
-  "private": true,
+  "name": "library_manager",
+  "version": "1.0.0",
+  "description": "Treehouse Project 10 - Build a Library Manager ",
+  "main": "index.js",
   "scripts": {
-    "start": "node ./bin/www"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anoopmundathan/library_manager.git"
+  },
+  "author": "Anoop Mundathan <anoop.mundathan@gmail.com> (http://anoopmundathan.me/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anoopmundathan/library_manager/issues"
+  },
+  "homepage": "https://github.com/anoopmundathan/library_manager#readme",
   "dependencies": {
-    "body-parser": "~1.18.2",
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.9",
-    "express": "~4.15.5",
-    "morgan": "~1.9.0",
-    "npm": "^6.0.1",
-    "pug": "2.0.0-beta11",
-    "sequelize": "^4.37.7",
-    "sequelize-cli": "^4.0.0",
-    "serve-favicon": "~2.4.5",
-    "sqlite3": "^4.0.0"
+    "body-parser": "1.16.0",
+    "dateformat": "2.0.0",
+    "express": "4.14.0",
+    "method-override": "2.3.7",
+    "moment": "2.17.1",
+    "path": "0.12.7",
+    "pug": "2.0.0-beta6",
+    "sequelize": "3.29.0",
+    "sqlite3": "3.1.8"
   }
 }
