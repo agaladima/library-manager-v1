@@ -1,119 +1,133 @@
 'use strict';
 
 var express = require('express');
-
-var Books = require('../models').Books;
-var Loans = require('../models').Loans;
-var Patrons = require('../models').Patrons;
-
 var router = express.Router();
+var Book = require("../models").Book;
+var Loan = require("../models").Loan;
+var Patron = require("../models").Patron;
 
-// GET /patrons - List All Patrons
+
+// GET patrons page
 router.get('/', function(req, res, next) {
-	Patrons.findAll().then(function(patrons) {
-		res.render('patrons/all_patrons', {
-			patrons: patrons
-		});
-	});
+  Patron.findAll({order: 'last_name'}).then(function(patronlistings){
+    if (patronlistings) {
+      res.render('partials/patrons', {
+        title: 'Patrons',
+        patrons: patronlistings
+      });
+     } else {
+        err.status == 404;
+        return next(err);
+      }
+  }).catch(function(err){
+    return next(err);
+  });
 });
 
-// GET /patrons/new - New Patron
+// GET new patron form
 router.get('/new', function(req, res, next) {
-	res.render('patrons/new_patron', {patron : Patrons.build()});
+  res.render('partials/newpatron', {
+    title: 'Create New Patron'
+  });
+  if (err) return next(err);
 });
 
-// POST /patrons - Create New Patron
-router.post('/', function(req, res, next) {
-	Patrons.create(req.body).then(function(patron) {
-		res.redirect('/patrons');
-	}).catch(function(err) {
-		if(err.name === "SequelizeValidationError") {
-			res.render('patrons/new_patron', {
-				patron: Patrons.build(req.body),
-				errors: err.errors
-			});
-		} else {
-			throw err;
-		}
-	});
-});
+// POST new patron
+router.post('/new', function(req, res, next) {
+  Patron.create(req.body)
+  .then(function(patron){
+    res.redirect('/patrons/');
+  }).catch(function(err){
+    // if there's a validation error, re-render page with errors
+    if (err.name == 'SequelizeValidationError') {
 
-// GET /patrons/:id - Individual Patron detail and Loan History
+      // loop over err messages
+      var errMessages = [];
+      for (var i=0; i<err.errors.length; i++) {
+        errMessages[i] = err.errors[i].message;
+      }
+
+      /* I want to keep existing fields from clearing out on submit (i.e., so that if there's a validation error the librarian doesn't have to re-enter all the data), so I have added logic in the newpatron template to check which properties of req.body exist. I'm making req.body available to the template via the following object */
+      res.render('partials/newpatron', {
+        title: 'Create New Patron',
+        patronFirstName: req.body.first_name,
+        patronLastName: req.body.last_name,
+        patronAddress: req.body.address,
+        patronEmail: req.body.email,
+        patronLibraryId: req.body.library_id,
+        patronZipCode: req.body.zip_code,
+        errors: errMessages
+      });
+    } else {
+      // else send to middleware error handler
+      return next(err);
+    }
+  }); // ends catch
+}); // ends POST
+
+// GET patron details
 router.get('/:id', function(req, res, next) {
-	Patrons.findById(req.params.id).then(function(patron) {
-		/*
-		 * Set Associations
-		 */
-		Loans.belongsTo(Books, {foreignKey: 'book_id'});
-		Loans.belongsTo(Patrons, {foreignKey: 'patron_id'});
-		/*
-		 * SELECT * 
-		 * FROM LOANS A 
-		 * INNER JOIN BOOKS B 
-		 * 		ON A.BOOK_ID = B.ID
-		 * INNER JOIN PATRONS C
-		 *      ON A.PATRON_ID = C.ID 
-		 * WHERE 
-		 *      A.BOOK_ID = REQ.PARAMS.ID;
-		*/
+  Patron.findAll({
+    include: [{ model: Loan, include: [{ model: Book }] }],
+    where: { id: req.params.id }
+  })
+  .then(function(patronlistings){
+    var patrondetails = JSON.parse(JSON.stringify(patronlistings));
 
-		Loans.findAll({
-			include: [
-					  {model: Books,required: true}, 
-					  {model: Patrons,required: true}
-			],
-			where: {
-				patron_id: req.params.id
-			}
-		}).then(function(data) {
-			res.render('patrons/patron_detail', {patron: patron, loans: data});
-		}).catch(function(err) {
-    		res.sendStatus(500);
-  		});
-		
-	});
+    if (patrondetails) {
+      res.render('partials/patrondetail', {
+        title: 'Patron Details',
+        patron: patrondetails[0],
+        loans: patrondetails[0].Loans
+      });
+    } else {
+      err.status == 404;
+      return next(err);
+    }
+  }).catch(function(err){
+    return next(err);
+  });
 });
 
-// PUT /patrons/:id - Update Patron
+
+// PUT or update patron details form
 router.put('/:id', function(req, res, next) {
-	Patrons.findById(req.params.id).then(function(patron) {
-		return patron.update(req.body);
-	}).then(function() {
-		res.redirect('/patrons');
-	}).catch(function(err) {
-		/*
-		 * If required fields are not there, show error
-		 */
-		if(err.name === "SequelizeValidationError") {
-			/*
-	 		 * Set Associations
-	  		 */
-			Loans.belongsTo(Books, {foreignKey: 'book_id'});
-			Loans.belongsTo(Patrons, {foreignKey: 'patron_id'});
-			/*
-			 * Query again to get loan History of book
-			 */
-			Loans.findAll({
-				include: [
-					{model: Books,required: true}, 
-					{model: Patrons,required: true}
-				],
-				where: {
-					patron_id: req.params.id
-				}
-			}).then(function(data) {
-				req.body.id = req.params.id;
-				res.render('patrons/patron_detail', {
-					patron: req.body, 
-					loans: data,
-					errors: err.errors
-				});
-			}).catch(function(err) {
-    			res.sendStatus(500);
-  			}); // End of Loans.findAll
-		} else {
-			throw err;
-		} // End If
-	});
+  Patron.findById(req.params.id).then(function(patron){
+    return patron.update(req.body);
+  }).then(function(patron){
+    res.redirect('/patrons/' + patron.id);
+  }).catch(function(err){
+    // if there's a validation error, re-render page with errors
+    if (err.name == 'SequelizeValidationError') {
+
+      Patron.findAll({
+        include: [{ model: Loan, include: [{ model: Book }] }],
+        where: { id: req.params.id }
+      })
+      .then(function(patronlistings){
+        var patrondetails = JSON.parse(JSON.stringify(patronlistings));
+        // loop over err messages
+        var errMessages = [];
+        for (var i=0; i<err.errors.length; i++) {
+          errMessages[i] = err.errors[i].message;
+        }
+
+        if (patrondetails) {
+          res.render('partials/patrondetail', {
+            title: 'Patron Details',
+            patron: patrondetails[0],
+            loans: patrondetails[0].Loans,
+            errors: errMessages
+          });
+        } // ends if
+
+      }); // ends then
+    } else {
+      // else send to middleware error handler
+      return next(err);
+    }
+  }); // ends catch
 });
+
+
 module.exports = router;

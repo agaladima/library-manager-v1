@@ -2,136 +2,213 @@
 
 var express = require('express');
 var router = express.Router();
-
 var moment = require('moment');
+var Book = require("../models").Book;
+var Loan = require("../models").Loan;
+var Patron = require("../models").Patron;
 
-var Books = require('../models').Books;
-var Patrons = require('../models').Patrons;
-var Loans = require('../models').Loans;
 
-// GET /loans - List All Loans
+// GET loans page
 router.get('/', function(req, res, next) {
+  Loan.findAll({
+    include: [{ all: true }],
+    order: 'Book.title'
+  }).then(function(loanlistings){
 
-	var filter = req.query.filter;
+    if (loanlistings) {
+      res.render('partials/loans', {
+        title: 'Loans',
+        loans: loanlistings
+      });
+    } else {
+      err.status == 404;
+      return next(err);
+    }
 
-	Loans.belongsTo(Books, {foreignKey: 'book_id'});
-	Loans.belongsTo(Patrons, {foreignKey: 'patron_id'});
+  }).catch(function(err){
+    return next(err);
+  });
+}); // ends get
 
-	if(filter === 'overdue') {
-		/*
-		 * SELECT * 
-		 * FROM LOANS A 
-		 * INNER JOIN BOOKS B 
-		 * 		ON A.BOOK_ID = B.ID
-		 * WHERE 
-		 *		A.RETURN_BY < "TODAYS' DATE" AND A.RETURNED_ON IS NULL;
-		*/
-		Loans.findAll({
-			where: {returned_on: {$eq: null}, return_by: {$lt: new Date()}},
-			include: [
-				  		{model: Books,required: true}, 
-				  		{model: Patrons,required: true}
-				 	]
-		}).then(function(data) {
-			res.render('loans/overdue_loans', {loans: data});
-		}).catch(function(err) {
-    		res.sendStatus(500);
-  		});
-	} else if(filter === 'checked_out') {
-		/*
-		 * SELECT * 
-		 * FROM LOANS A 
-		 * INNER JOIN BOOKS B 
-		 *		ON A.BOOK_ID = B.ID 
-		 * WHERE 
-		 *		A.RETURNED_ON IS NULL;
-		*/
-		Loans.findAll({
-			where: {returned_on: {$eq: null}},
-			include: [
-				  		{model: Books,required: true}, 
-				  		{model: Patrons,required: true}
-				 	]
-		}).then(function(data) {
-			res.render('loans/checked_loans', {loans: data});
-		}).catch(function(err) {
-    		res.sendStatus(500);
-  		});
-	} else {
-		Loans.findAll({
-			include: [
-				  		{model: Books,required: true}, 
-				  		{model: Patrons,required: true}
-				 	]
-		}).then(function(loans) {
-			res.render('loans/all_loans', {loans: loans});
-		}).catch(function(err) {
-    		res.sendStatus(500);
-  		});
-	}	
+
+
+// GET overdue loans
+router.get('/overdue', function(req, res, next) {
+  Loan.findAll({
+    include: [{ all: true }],
+		where: { return_by: { $lt: moment().format('YYYY-MM-DD').toString() }, returned_on: null }
+  }).then(function(loanlistings){
+    var loansdata = JSON.parse(JSON.stringify(loanlistings));
+
+    if (loanlistings) {
+      res.render('partials/overdueloans', {
+        title: 'Overdue Loans',
+        loans: loansdata
+      });
+    } else {
+      err.status == 404;
+      return next(err);
+    }
+
+  }).catch(function(err) {
+    return next(err);
+  });
+}); // ends get
+
+// GET checked-out loans
+router.get('/checked_out', function(req, res, next) {
+  Loan.findAll({
+    include: [{ all: true }],
+  	where: { returned_on: null }
+  }).then(function(loanlistings){
+    if (loanlistings) {
+      res.render('partials/checkedoutloans', {
+        title: 'Checked-Out Loans',
+        loans: loanlistings
+      });
+    } else {
+      err.status == 404;
+      return next(err);
+    }
+  }).catch(function(err) {
+    return next(err);
+  });
 });
 
-// GET /loans/new - New Loan
+
+
+// Get return book form and details via loan id
+router.get('/return/:id', function(req, res, next) {
+  Loan.findById((req.params.id), {
+    include: [{ all: true }],
+  })
+  .then(function(loandetails){
+    if (loandetails) {
+      loandetails.returned_on = moment().format('YYYY-MM-DD');
+      res.render('partials/returnbook', {
+        title: 'Return Book',
+        loan: loandetails
+      });
+    } else {
+      err.status == 404;
+      return next(err);
+    }
+  }).catch(function(err){
+    return next(err);
+  });
+});
+
+
+// PUT or update return book using loan id
+router.put('/return/:id', function(req, res, next) {
+  Loan.findById(req.params.id).then(function(loan){
+    return loan.update(req.body);
+  }).then(function(loan){
+    res.redirect('/loans/');
+  }).catch(function(err){
+    // if validation error, re-render page with error messages
+    if (err.name == 'SequelizeValidationError') {
+
+      Loan.findById((req.params.id), {
+        include: [{ all: true }],
+      })
+      .then(function(loandetails){
+        // loop over err messages
+        var errMessages = [];
+        for (var i=0; i<err.errors.length; i++) {
+          errMessages[i] = err.errors[i].message;
+        }
+        loandetails.returned_on = moment().format('YYYY-MM-DD');
+        res.render('partials/returnbook', {
+          title: 'Return Book',
+          loan: loandetails,
+          errors: errMessages
+        });
+      });
+    } else {
+      // if it's not a validation error, send to middleware error handler
+      return next(err);
+    }
+
+  }); // ends catch
+});
+
+
+// GET new loan form
 router.get('/new', function(req, res, next) {
-	
-	Books.findAll().then(function(books) {
-		Patrons.findAll().then(function(patrons) {
-			var loanedOn = moment().format('YYYY-MM-DD');
-			var returnBy = moment().add('7', 'days').format('YYYY-MM-DD');
+  var bookdetails;
+  var patrondetails;
 
-			res.render('loans/new_loan', 
-			{
-				books : books, 
-				patrons: patrons, 
-				loanedOn: loanedOn,
-				returnBy: returnBy
-			});
-
-		}).catch(function(err) {
-    		res.sendStatus(500);
-  		});
-	});	
+  Book.findAll({
+    attributes: ['id', 'title'],
+    order: 'title',
+    // include: [{ model: Loan }]
+  }).then(function(results){
+    console.log(results);
+    // don't let same book be borrowed more than once
+    bookdetails = results;
+  }).then(
+    Patron.findAll({
+      attributes: ['id', 'first_name', 'last_name'],
+      order: 'last_name'
+    }).then(function(results){
+      patrondetails = results;
+    }).then(function(){
+      res.render('partials/newloan', {
+        title: 'Create New Loan',
+        books: bookdetails,
+        patrons: patrondetails,
+        loaned_on: moment().format('YYYY-MM-DD'),
+        return_by: moment().add(7, 'days').format('YYYY-MM-DD')
+      });
+    }).catch(function(err){
+      return next(err);
+    })
+  );
 });
 
-// POST /loans  - Create New Loan
-router.post('/', function(req, res, next) {
-	Loans.create(req.body).then(function(loan) {
-		res.redirect('/loans');
-	}).catch(function(err) {
-    	res.sendStatus(500);
-  	});
-});
+// POST new loan form
+router.post('/new', function(req, res, next) {
+  Loan.create(req.body)
+  .then(function(loan){
+    res.redirect('/loans/');
+  }).catch(function(err){
+    // if validation error, re-render page with error messages
+    if (err.name == 'SequelizeValidationError') {
 
-//GET /loans/:id - Return Book
-router.get('/:id', function(req, res, next) {
-	Loans.belongsTo(Books, {foreignKey: 'book_id'});
-	Loans.belongsTo(Patrons, {foreignKey: 'patron_id'});
-	Loans.findAll({
-			where: {id: {$eq: req.params.id}},
-			include: [
-				  		{model: Books,required: true}, 
-				  		{model: Patrons,required: true}
-				 	 ]
-		}).then(function(data) {
-			res.render('loans/return_book', {
-				loan: data,
-				returned_on: moment().format('YYYY-MM-DD')
-			});
-		}).catch(function(err) {
-    		res.sendStatus(500);
-  		});
-});
+      // loop over err messages
+      var errMessages = [];
+      for (var i=0; i<err.errors.length; i++) {
+        errMessages[i] = err.errors[i].message;
+      }
 
-//PUT /loans/:id - Return Book - Update 
-router.put('/:id', function(req, res, next) {
-	Loans.findById(req.params.id).then(function(loan) {
-		return loan.update(req.body);
-	}).then(function() {
-		res.redirect('/loans');
-	}).catch(function(err) {
-    	res.sendStatus(500);
-  	});
-});
+      var bookdetails;
+      var patrondetails;
 
+      Book.findAll({attributes: ['id', 'title'], order: 'title'}).then(function(results){
+        bookdetails = results;
+      }).then(
+        Patron.findAll({
+          attributes: ['id', 'first_name', 'last_name'],
+          order: 'last_name'
+        }).then(function(results){
+        patrondetails = results;
+        }).then(function(){
+          res.render('partials/newloan', {
+            title: 'Create New Loan',
+            books: bookdetails,
+            patrons: patrondetails,
+            loaned_on: moment().format('YYYY-MM-DD'),
+            return_by: moment().add(7, 'days').format('YYYY-MM-DD'),
+            errors: errMessages
+          });
+        }) // ends then
+      ); // ends then
+    } else {
+      // if it's not a validation error, send to middleware error handler
+      return next(err);
+    }
+  }); // ends catch
+}); // ends POST
 
 module.exports = router;

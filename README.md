@@ -1,33 +1,23 @@
-# library_manager
-> Treehouse - Project10 - Build a Library Manager
+## Library manager with Express, Jade and Sequelize
+*Project 10 of Treehouse Full Stack JavaScript course*
 
-A simple library management system built using Express and SQL ORM Sequelize. It uses SQLite for database operations.
+### To run this project:
+Run `git clone https://github.com/jprittie/Library-manager-with-Express-and-Sequelize.git` to clone the project on your local machine. Run `npm install` to install all the dependencies. Run `npm start` to start the project with the node server. Navigate to localhost:3000.
 
-## Getting Started
-### Setup
-```
-$ git clone https://github.com/anoopmundathan/library_manager.git
-$ cd library_manager
-```
-### Install
-```
-$ npm i
-```
-### Run 
-```
-npm start
-```
-### View
-```
-http://localhost:3500
-```
-### Project Resources
-[Sequelize CLI](http://docs.sequelizejs.com/en/latest/docs/migrations/?highlight=cli)
 
-[Sequelize Documentation - Adding/removing timestamps from definitions](http://docs.sequelizejs.com/en/latest/docs/getting-started/#application-wide-model-options)
+### Project objectives:
+This project creates a library management system for a small library. The librarian has been using a simple sqlite database and has been entering data in manually. The librarian wants a more intuitive way to handle the library's books, patrons and loans.
 
-[Sequelize Documentation - Validations](http://docs.sequelizejs.com/en/latest/docs/models-definition/?highlight=validate#validations)
 
-[Sequelize Documentation - Model associations](http://docs.sequelizejs.com/en/latest/api/associations/)
+### Specific requirements:
+* Given static HTML designs and the existing SQLite database, students must implement a dynamic website in Express and a SQL ORM, Sequelize.
+* Create Sequelize models for books, patrons and loans tables according to strict requirements.
+* Templates include a home screen and pages for overall books, patrons and loans listings. There are also detailed screens for each of these categories.
 
-[Sequelize Documentation - Pagination and Lim](http://docs.sequelizejs.com/en/latest/docs/querying/?highlight=validate#pagination-limiting)
+
+The librarian should be able to:
+* Filter books by overdue and checked out books to quickly see the state of the library.
+* Add a book or patron to the database, as well as check out and return books.
+* Go to a book’s detail page, make edits and view its loan history. 
+* Go to a patron's detail page, make edits and view their loan history.
+* Be notified if any of the required fields in any given form have any missing data, so that the information can be corrected.
