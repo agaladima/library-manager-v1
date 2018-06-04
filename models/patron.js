@@ -1,15 +1,15 @@
 'use strict';
 module.exports = function(sequelize, DataTypes) {
-  var Patrons = sequelize.define('Patrons', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true
-    },
+  var Patron = sequelize.define('Patron', {
+    // id: {
+    //   type: DataTypes.INTEGER,
+    //   primaryKey: true
+    // },
     first_name: {
       type: DataTypes.STRING,
       validate: {
         notEmpty: {
-          msg: "First Name is required"
+          msg: "Please enter a first name"
         }
       }
     },
@@ -17,7 +17,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       validate: {
         notEmpty: {
-          msg: "Last Name is required"
+          msg: "Please enter a last name"
         }
       }
     },
@@ -25,7 +25,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       validate: {
         notEmpty: {
-          msg: "Address is required"
+          msg: "Please enter an address"
         }
       }
     },
@@ -33,7 +33,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       validate: {
         notEmpty: {
-          msg: "Email is required"
+          msg: "Please enter an email address"
+        },
+        isEmail: {
+          msg: "Please enter a valid email"
         }
       }
     },
@@ -41,7 +44,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       validate: {
         notEmpty: {
-          msg: "Library ID is required"
+          msg: "Please enter a library ID"
         }
       }
     },
@@ -49,18 +52,17 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       validate: {
         notEmpty: {
-          msg: "Zip Code is required"
+          msg: "Please enter a zip code"
         }
       }
     }
   }, {
-    timestamps: false
-  }, {
     classMethods: {
       associate: function(models) {
-        // associations can be defined here
+        Patron.hasMany(models.Loan, {foreignKey: 'patron_id'});
       }
-    }
+    },
+    timestamps: false
   });
-  return Patrons;
+  return Patron;
 };

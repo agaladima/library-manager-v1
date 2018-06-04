@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: function(queryInterface, Sequelize) {
-    return queryInterface.createTable('Loans', {
+    return queryInterface.createTable('Patrons', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -11,20 +11,23 @@ module.exports = {
       id: {
         type: Sequelize.INTEGER
       },
-      book_id: {
+      first_name: {
+        type: Sequelize.STRING
+      },
+      last_name: {
+        type: Sequelize.STRING
+      },
+      address: {
+        type: Sequelize.STRING
+      },
+      email: {
+        type: Sequelize.STRING
+      },
+      library_id: {
+        type: Sequelize.STRING
+      },
+      zip_code: {
         type: Sequelize.INTEGER
-      },
-      patron_id: {
-        type: Sequelize.INTEGER
-      },
-      loaned_on: {
-        type: Sequelize.DATE
-      },
-      returned_by: {
-        type: Sequelize.DATE
-      },
-      returned_on: {
-        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,
@@ -37,6 +40,6 @@ module.exports = {
     });
   },
   down: function(queryInterface, Sequelize) {
-    return queryInterface.dropTable('Loans');
+    return queryInterface.dropTable('Patrons');
   }
 };
